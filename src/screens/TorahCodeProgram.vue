@@ -56,6 +56,7 @@ export default {
       matrixEnd: TANACH.length - 1,
       loading: null,
       searchWords: [],
+      tableHeight: 20,
     };
   },
   computed: {
@@ -67,30 +68,61 @@ export default {
     },
     displayedMatrix() {
       if (this.highlightedResultItems.length > 0) {
-        let result = [];
-        for (let i = 0; i < 50; i++) {
-          let letterIdx =
-            this.highlightedResultItems[0].letterIndexes[0] +
-            this.highlightedResultItems[0].skip * i;
-          for (let j = Math.floor(this.displayedMatrixSize / 2); j > 0; j--) {
-            result.push({
-              value: TANACH.charAt(letterIdx - j),
-              idx: letterIdx - j,
-            });
-          }
-          for (let k = 0; k < Math.ceil(this.displayedMatrixSize / 2); k++) {
-            result.push({
-              value: TANACH.charAt(letterIdx + k),
-              idx: letterIdx + k,
-            });
-          }
-        }
-        return result;
+        return this.generateMatrixRowsBeforeOrAfterResult(
+          this.highlightedResultItems[0].letterIndexes[0],
+          this.highlightedResultItems[0].skip,
+          "BEFORE"
+        ).concat(
+          this.generateMatrixRowsBeforeOrAfterResult(
+            this.highlightedResultItems[0].letterIndexes[0],
+            this.highlightedResultItems[0].skip,
+            "AFTER"
+          )
+        );
       }
       return null;
     },
   },
   methods: {
+    generateMatrixRowsBeforeOrAfterResult(firstIdx, skip, type) {
+      let result = [];
+      const length =
+        type === "BEFORE"
+          ? Math.floor(this.tableHeight / 2)
+          : Math.ceil(this.tableHeight / 2);
+      const startingPoint = type === "BEFORE" ? 1 : 0;
+      for (let i = startingPoint; i < length; i++) {
+        let letterIdx =
+          type === "BEFORE" ? firstIdx - skip * i : firstIdx + skip * i;
+        if (
+          (letterIdx <= 0 && type === "BEFORE") ||
+          (letterIdx > TANACH.length - 1 && type === "AFTER")
+        ) {
+          break;
+        } else {
+          result = result.concat(
+            this.generateLineInMatrix(letterIdx, this.displayedMatrixSize, type)
+          );
+        }
+      }
+      return type === "BEFORE" ? result.reverse() : result;
+    },
+    generateLineInMatrix(idx, lineSize, type) {
+      const result = [];
+      for (let j = Math.floor(lineSize / 2); j > 0; j--) {
+        result.push({
+          value: TANACH.charAt(idx - j),
+          idx: idx - j,
+        });
+      }
+      for (let k = 0; k < Math.ceil(this.displayedMatrixSize / 2); k++) {
+        result.push({
+          value: TANACH.charAt(idx + k),
+          idx: idx + k,
+        });
+      }
+      return type === "BEFORE" ? result.reverse() : result;
+    },
     updateField({ field, value }) {
       this.results = [];
       this.highlightedResultItems = [];
@@ -107,21 +139,19 @@ export default {
     },
 
     updateHighlightedResults({ item, action }) {
-      console.log(action);
-      // switch (action) {
-      //   case "REMOVE":
-      //     this.highlightedResultItems.splice(
-      //       this.highlightedResultItems.findIndex((i) => i.id === item.id),
-      //       1
-      //     );
-      //     break;
-      //   case "ADD":
-      //     this.highlightedResultItems.push(item);
-      //     break;
-      //   default:
-      //     break;
-      // }
-      this.highlightedResultItems = [item];
+      switch (action) {
+        case "REMOVE":
+          this.highlightedResultItems.splice(
+            this.highlightedResultItems.findIndex((i) => i.id === item.id),
+            1
+          );
+          break;
+        case "ADD":
+          this.highlightedResultItems = [item];
+          break;
+        default:
+          break;
+      }
     },
   },
 };

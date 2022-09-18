@@ -77,7 +77,7 @@ export default {
           }
         }
       }
-      this.loading += 100 / (TANACH.length * (matrixEnd - matrixStart));
+      this.loading += 100 / ((matrixEnd - matrixStart) * numOfWords);
       return foundWords;
     },
   },
