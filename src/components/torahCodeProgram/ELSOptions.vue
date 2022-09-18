@@ -16,9 +16,13 @@ export default {
   name: "ELSOptions",
   mixins: [ELSMixin],
   props: {
-    matrixText: {
-      type: String,
-      default: "",
+    matrixStart: {
+      type: Number,
+      default: 0,
+    },
+    matrixEnd: {
+      type: Number,
+      default: 0,
     },
   },
   data() {
@@ -46,7 +50,8 @@ export default {
     async search() {
       this.$emit("update-results", []);
       await this.useELSAlgorithm({
-        matrixText: this.matrixText,
+        matrixStart: this.matrixStart,
+        matrixEnd: this.matrixEnd,
         searchWords: this.searchWords,
         minSkip: Number(this.minSkip),
         maxSkip: Number(this.maxSkip),

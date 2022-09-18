@@ -1,3 +1,5 @@
+import { TANACH } from "@/data/tanach";
+
 const MAX_BATCH = 5;
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -10,37 +12,45 @@ export default {
     };
   },
   methods: {
-    async useELSAlgorithm({ matrixText, searchWords, minSkip, maxSkip }) {
-      for (let i = 0; i < matrixText.length; i++) {
+    async useELSAlgorithm({
+      matrixStart,
+      matrixEnd,
+      searchWords,
+      minSkip,
+      maxSkip,
+    }) {
+      for (let i = matrixStart; i < matrixEnd; i++) {
         for (let j = 0; j < searchWords.length; j++) {
           await this.findWord(
-            matrixText,
             i,
             searchWords[j],
             minSkip,
             maxSkip,
-            searchWords.length
+            searchWords.length,
+            matrixStart,
+            matrixEnd
           );
         }
       }
       this.loading = 0;
     },
     async findWord(
-      matrixText,
       currentLetterIdx,
       searchWord,
       minSkip,
       maxSkip,
-      numOfWords
+      numOfWords,
+      matrixStart,
+      matrixEnd
     ) {
       let foundWords = [];
-      if (matrixText[currentLetterIdx] === searchWord.charAt(0)) {
+      if (TANACH[currentLetterIdx] === searchWord.charAt(0)) {
         let currentSkip = minSkip;
         while (currentSkip <= maxSkip) {
           let matchedWord = "";
           const letterIndexes = [];
           for (let i = 0; i < searchWord.length; i++) {
-            matchedWord += matrixText[currentLetterIdx + currentSkip * i];
+            matchedWord += TANACH[currentLetterIdx + currentSkip * i];
             letterIndexes.push(currentLetterIdx + currentSkip * i);
           }
           if (matchedWord === searchWord) {
@@ -62,12 +72,12 @@ export default {
           currentSkip++;
 
           await sleep(0);
-          if (currentLetterIdx === matrixText.length) {
+          if (currentLetterIdx === matrixEnd) {
             this.loading = null;
           }
         }
       }
-      this.loading += 100 / (matrixText.length * numOfWords);
+      this.loading += 100 / (TANACH.length * (matrixEnd - matrixStart));
       return foundWords;
     },
   },

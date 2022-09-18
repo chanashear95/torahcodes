@@ -26,7 +26,8 @@
       @update-field="updateField"
     />
     <ELSOptions
-      :matrix-text="matrixText"
+      :matrix-start="matrixStart"
+      :matrix-end="matrixEnd"
       @update-search-words="updateSearchWords"
       @update-results="updateResults"
       @update-field="updateField"
@@ -58,9 +59,6 @@ export default {
     };
   },
   computed: {
-    matrixText() {
-      return TANACH.slice(this.matrixStart, this.matrixEnd);
-    },
     displayedMatrixSize() {
       const defaultSize = 50;
       return defaultSize > this.highlightedResultItems[0]?.skip
