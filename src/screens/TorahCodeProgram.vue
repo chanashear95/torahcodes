@@ -9,7 +9,10 @@
       :results="results"
       :highlighted-results="highlightedResultItems"
     />
-    <p style="color: blue; font-size: 20px" v-if="loading < 100 && loading > 0">
+    <p
+      style="color: blue; font-size: 20px"
+      v-if="loading < 99.99999 && loading > 0"
+    >
       Loading {{ loading }} %
     </p>
 

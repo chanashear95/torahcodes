@@ -46,17 +46,21 @@ const findWord = async (
   if (TANACH[currentLetterIdx] === searchWord.charAt(0)) {
     let currentSkip = minSkip;
     while (currentSkip <= maxSkip) {
-      let matchedWord = "";
-      const letterIndexes = [];
+      let frontWord = "";
+      const frontIndexes = [];
+      let backWord = "";
+      const backIndexes = [];
       for (let i = 0; i < searchWord.length; i++) {
-        matchedWord += TANACH[currentLetterIdx + currentSkip * i];
-        letterIndexes.push(currentLetterIdx + currentSkip * i);
+        frontWord += TANACH[currentLetterIdx + currentSkip * i];
+        frontIndexes.push(currentLetterIdx + currentSkip * i);
+        backWord += TANACH[currentLetterIdx - currentSkip * i];
+        backIndexes.push(currentLetterIdx - currentSkip * i);
       }
-      if (matchedWord === searchWord) {
+      if (frontWord === searchWord) {
         foundWords.push({
-          id: letterIndexes.join(""),
+          id: frontIndexes.join(""),
           word: searchWord,
-          letterIndexes: letterIndexes,
+          letterIndexes: frontIndexes,
           skip: currentSkip,
         });
         if (foundWords.length % MAX_BATCH === 0 || currentSkip === maxSkip) {
@@ -64,7 +68,21 @@ const findWord = async (
           foundWords = [];
         }
       }
-      matchedWord = "";
+      if (backWord === searchWord) {
+        foundWords.push({
+          id: backIndexes.join(""),
+          word: searchWord,
+          letterIndexes: backIndexes,
+          skip: currentSkip,
+        });
+        if (foundWords.length % MAX_BATCH === 0 || currentSkip === maxSkip) {
+          postMessage(JSON.stringify(foundWords));
+          foundWords = [];
+        }
+      }
+
+      frontWord = "";
+      backWord = "";
       currentSkip++;
 
       await sleep(0);
