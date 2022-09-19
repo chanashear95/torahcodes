@@ -1,7 +1,4 @@
-import { TANACH } from "@/data/tanach";
-
-const MAX_BATCH = 5;
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const MAX_WORKERS = 20;
 
 export default {
   name: "ELSMixin",
@@ -19,66 +16,69 @@ export default {
       minSkip,
       maxSkip,
     }) {
-      for (let i = matrixStart; i < matrixEnd; i++) {
-        for (let j = 0; j < searchWords.length; j++) {
-          await this.findWord(
-            i,
-            searchWords[j],
-            minSkip,
-            maxSkip,
-            searchWords.length,
-            matrixStart,
-            matrixEnd
-          );
-        }
+      const totalMatrixLength = matrixEnd - matrixStart;
+      const lettersPerWorker = Math.ceil(totalMatrixLength / MAX_WORKERS);
+      for (let i = 0; i < MAX_WORKERS; i++) {
+        let endIdx =
+          i * lettersPerWorker + lettersPerWorker >= matrixEnd
+            ? matrixEnd
+            : i * lettersPerWorker + lettersPerWorker;
+        this.createELSWorker({
+          matrixStart,
+          matrixEnd,
+          workerStartRange: i * lettersPerWorker,
+          workerEndRange: endIdx,
+          searchWords,
+          minSkip,
+          maxSkip,
+        });
       }
-      this.loading = 0;
     },
-    async findWord(
-      currentLetterIdx,
-      searchWord,
+    createELSWorker({
+      matrixStart,
+      matrixEnd,
+      workerStartRange,
+      workerEndRange,
+      searchWords,
       minSkip,
       maxSkip,
-      numOfWords,
-      matrixStart,
-      matrixEnd
-    ) {
-      let foundWords = [];
-      if (TANACH[currentLetterIdx] === searchWord.charAt(0)) {
-        let currentSkip = minSkip;
-        while (currentSkip <= maxSkip) {
-          let matchedWord = "";
-          const letterIndexes = [];
-          for (let i = 0; i < searchWord.length; i++) {
-            matchedWord += TANACH[currentLetterIdx + currentSkip * i];
-            letterIndexes.push(currentLetterIdx + currentSkip * i);
-          }
-          if (matchedWord === searchWord) {
-            foundWords.push({
-              id: letterIndexes.join(""),
-              word: searchWord,
-              letterIndexes: letterIndexes,
-              skip: currentSkip,
-            });
-            if (
-              foundWords.length % MAX_BATCH === 0 ||
-              currentSkip === maxSkip
-            ) {
-              this.results = this.results.concat(foundWords);
-              foundWords = [];
+    }) {
+      if (window.Worker) {
+        const worker = new Worker("/workers/els/els.worker.js", {
+          type: "module",
+        });
+        worker.postMessage(
+          JSON.stringify({
+            matrixStart,
+            matrixEnd,
+            workerStartRange,
+            workerEndRange,
+            searchWords,
+            minSkip,
+            maxSkip,
+          })
+        );
+        worker.onmessage = (msg) => {
+          if (msg.data) {
+            const parsedData = JSON.parse(msg.data);
+            switch (typeof parsedData) {
+              case "number":
+                if (parsedData === 0) {
+                  this.loading = null;
+                } else {
+                  this.loading += parsedData;
+                }
+                break;
+              default:
+                this.results = this.results.concat(parsedData);
+                break;
             }
+          } else {
+            console.log("Closing");
+            worker.terminate();
           }
-          matchedWord = "";
-          currentSkip++;
-
-          await sleep(0);
-          if (currentLetterIdx === matrixEnd) {
-            this.loading = null;
-          }
-        }
+        };
       }
-      this.loading += 100 / ((matrixEnd - matrixStart) * numOfWords);
-      return foundWords;
     },
   },
 };
