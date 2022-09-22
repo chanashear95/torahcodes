@@ -1,4 +1,4 @@
-const MAX_WORKERS = 20;
+const MAX_WORKERS = 18;
 
 export default {
   name: "ELSMixin",

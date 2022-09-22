@@ -60,6 +60,7 @@ export default {
       loading: null,
       searchWords: [],
       tableHeight: 20,
+      displayedMatrix: null,
     };
   },
   computed: {
@@ -69,9 +70,16 @@ export default {
         ? this.highlightedResultItems[0].skip
         : defaultSize;
     },
-    displayedMatrix() {
+  },
+  watch: {
+    async highlightedResultItems() {
+      await this.setDisplayedMatrix();
+    },
+  },
+  methods: {
+    async setDisplayedMatrix() {
       if (this.highlightedResultItems.length > 0) {
-        return this.generateMatrixRowsBeforeOrAfterResult(
+        this.displayedMatrix = this.generateMatrixRowsBeforeOrAfterResult(
           this.highlightedResultItems[0].letterIndexes[0],
           this.highlightedResultItems[0].skip,
           "BEFORE"
@@ -82,11 +90,10 @@ export default {
             "AFTER"
           )
         );
+      } else {
+        this.displayedMatrix = null;
       }
-      return null;
     },
-  },
-  methods: {
     generateMatrixRowsBeforeOrAfterResult(firstIdx, skip, type) {
       let result = [];
       const length =
@@ -142,12 +149,14 @@ export default {
     },
 
     updateHighlightedResults({ item, action }) {
+      const items = [...this.highlightedResultItems];
       switch (action) {
         case "REMOVE":
-          this.highlightedResultItems.splice(
+          items.splice(
             this.highlightedResultItems.findIndex((i) => i.id === item.id),
             1
           );
+          this.highlightedResultItems = items;
           break;
         case "ADD":
           this.highlightedResultItems = [item];
