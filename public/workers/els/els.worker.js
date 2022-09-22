@@ -63,10 +63,6 @@ const findWord = async (
           letterIndexes: frontIndexes,
           skip: currentSkip,
         });
-        if (foundWords.length % MAX_BATCH === 0 || currentSkip === maxSkip) {
-          postMessage(JSON.stringify(foundWords));
-          foundWords = [];
-        }
       }
       if (backWord === searchWord) {
         foundWords.push({
@@ -75,12 +71,11 @@ const findWord = async (
           letterIndexes: backIndexes,
           skip: currentSkip,
         });
-        if (foundWords.length % MAX_BATCH === 0 || currentSkip === maxSkip) {
-          postMessage(JSON.stringify(foundWords));
-          foundWords = [];
-        }
       }
-
+      if (foundWords.length % MAX_BATCH === 0 || currentSkip === maxSkip) {
+        postMessage(JSON.stringify(foundWords));
+        foundWords = [];
+      }
       frontWord = "";
       backWord = "";
       currentSkip++;
