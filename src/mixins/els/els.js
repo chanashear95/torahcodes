@@ -20,13 +20,13 @@ export default {
       const lettersPerWorker = Math.ceil(totalMatrixLength / MAX_WORKERS);
       for (let i = 0; i < MAX_WORKERS; i++) {
         let endIdx =
-          i * lettersPerWorker + lettersPerWorker >= matrixEnd
+          i * lettersPerWorker + lettersPerWorker + matrixStart >= matrixEnd
             ? matrixEnd
-            : i * lettersPerWorker + lettersPerWorker;
+            : i * lettersPerWorker + lettersPerWorker + matrixStart;
         this.createELSWorker({
           matrixStart,
           matrixEnd,
-          workerStartRange: i * lettersPerWorker,
+          workerStartRange: i * lettersPerWorker + matrixStart,
           workerEndRange: endIdx,
           searchWords,
           minSkip,
